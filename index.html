@@ -7,15 +7,10 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background: #fff;
-  color: #000;
+  background: #fff; color: #000;
   font-family: 'Courier New', Courier, monospace;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 28px 20px;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 28px 20px;
 }
 #app { width: 100%; max-width: 380px; }
 h1 { font-size: 1.3rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 28px; text-align: center; }
@@ -34,7 +29,6 @@ button {
   text-transform: uppercase; letter-spacing: 0.12em; padding: 12px; cursor: pointer;
 }
 button:hover { background: #222; }
-button:disabled { background: #888; border-color: #888; cursor: not-allowed; }
 button.ghost { background: #fff; color: #000; }
 button.ghost:hover { background: #f0f0f0; }
 .divider { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: #888; }
@@ -52,21 +46,20 @@ button.ghost:hover { background: #f0f0f0; }
 .err { font-size: 0.78rem; color: #c00; min-height: 1em; }
 .rules-box { border: 1px solid #ccc; padding: 14px; font-size: 0.76rem; line-height: 1.7; color: #333; }
 .rules-box b { color: #000; }
-.dot-anim::after { content: ''; animation: dots 1.2s steps(3, end) infinite; }
-@keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } 100% { content: '.'; } }
 .waiting { text-align: center; font-size: 0.85rem; color: #555; padding: 8px 0; }
+.dot-anim::after { content: '.'; animation: dots 1.2s steps(3, end) infinite; }
+@keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } 100% { content: '.'; } }
 </style>
 </head>
 <body>
 <div id="app">
   <h1>Impostor</h1>
-
-  <!-- HOME -->
+ 
   <div id="s-home" class="screen active">
     <div class="rules-box">
       <b>How to play:</b><br>
       2 players get the same secret number (0–200).<br>
-      1 player gets IMPOSTOR — they don't know the number.<br>
+      1 player gets IMPOSTOR — no number.<br>
       Give clues. Vote on who's faking it.
     </div>
     <div>
@@ -82,8 +75,7 @@ button.ghost:hover { background: #f0f0f0; }
     <button class="ghost" onclick="doJoin()">Join Room</button>
     <div class="err" id="err-home"></div>
   </div>
-
-  <!-- LOBBY HOST -->
+ 
   <div id="s-host" class="screen">
     <p class="hint">Share this code with your friends:</p>
     <div class="code-big" id="disp-code"></div>
@@ -95,8 +87,7 @@ button.ghost:hover { background: #f0f0f0; }
     <button id="btn-start" onclick="doStart()" style="display:none">Assign Roles</button>
     <div class="err" id="err-host"></div>
   </div>
-
-  <!-- LOBBY GUEST -->
+ 
   <div id="s-guest" class="screen">
     <p class="hint">You joined:</p>
     <div class="code-big" id="disp-code-guest"></div>
@@ -106,18 +97,16 @@ button.ghost:hover { background: #f0f0f0; }
     </div>
     <p class="waiting">Waiting for host to start<span class="dot-anim"></span></p>
   </div>
-
-  <!-- ROLE REVEAL -->
+ 
   <div id="s-role" class="screen">
-    <p class="hint" style="text-align:center">👁 Look at this alone — don't show others</p>
+    <p class="hint" style="text-align:center">Look at this alone — don't show others</p>
     <div class="role-box">
       <div class="role-tag" id="role-tag"></div>
       <div class="role-val" id="role-val"></div>
     </div>
-    <button class="ghost" onclick="goReady()">I've seen my role — hide it</button>
+    <button class="ghost" onclick="show('s-ready')">I've seen my role — hide it</button>
   </div>
-
-  <!-- READY / GAME ON -->
+ 
   <div id="s-ready" class="screen">
     <div class="box" style="text-align:center;padding:24px">
       Game is live.<br><br>
@@ -126,15 +115,12 @@ button.ghost:hover { background: #f0f0f0; }
     </div>
     <button onclick="doPlayAgain()">Play Again</button>
   </div>
-
 </div>
-
-<!-- Firebase v9 compat (works as global firebase.*) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-// ─── Firebase config (shared public project for this game) ───────────────────
+ 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, off, remove, query, orderByChild, endAt } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyC6oDnf-gV15C90KhNkrm7aGgLwUlbX2Mw",
   authDomain: "imposter-game-kph-72602.firebaseapp.com",
@@ -144,102 +130,99 @@ const firebaseConfig = {
   messagingSenderId: "589210062434",
   appId: "1:589210062434:web:7cfaa042af90dbf876cb3b"
 };
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ─── State ────────────────────────────────────────────────────────────────────
+ 
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+ 
 let myName = '';
 let myCode = '';
 let isHost = false;
-let unsubscribe = null;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function show(id) {
+let activeRef = null;
+let activeHandler = null;
+ 
+window.show = function(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function err(id, msg) { document.getElementById(id).textContent = msg; }
+ 
+function setErr(id, msg) { document.getElementById(id).textContent = msg; }
 function clearErr(id) { document.getElementById(id).textContent = ''; }
+ 
 function rand4() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
 }
-function stopListener() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } }
-
-// ─── Create Room ─────────────────────────────────────────────────────────────
-async function doCreate() {
+ 
+function stopListener() {
+  if (activeRef && activeHandler) {
+    off(activeRef, 'value', activeHandler);
+    activeRef = null; activeHandler = null;
+  }
+}
+ 
+function renderPlayers(listId, players, showHost) {
+  const el = document.getElementById(listId);
+  if (!el) return;
+  const names = players ? Object.keys(players) : [];
+  el.innerHTML = names.map((p, i) =>
+    `<li>${p}${(showHost && i===0) ? ' <span style="font-size:0.7rem;color:#999">(host)</span>' : ''}</li>`
+  ).join('') || '<li style="color:#999">Nobody yet</li>';
+}
+ 
+window.doCreate = async function() {
   myName = document.getElementById('in-name').value.trim();
-  if (!myName) { err('err-home','Enter your name first.'); return; }
+  if (!myName) { setErr('err-home', 'Enter your name first.'); return; }
   clearErr('err-home');
-
   myCode = rand4();
   isHost = true;
-
-  const roomRef = db.ref('rooms/' + myCode);
-  await roomRef.set({
+  const roomRef = ref(db, 'rooms/' + myCode);
+  await set(roomRef, {
     players: { [myName]: true },
     status: 'waiting',
     roles: null,
     createdAt: Date.now()
   });
-
   document.getElementById('disp-code').textContent = myCode;
   show('s-host');
   listenRoom();
 }
-
-// ─── Join Room ────────────────────────────────────────────────────────────────
-async function doJoin() {
+ 
+window.doJoin = async function() {
   myName = document.getElementById('in-name').value.trim();
   const code = document.getElementById('in-code').value.trim().toUpperCase();
-  if (!myName) { err('err-home','Enter your name first.'); return; }
-  if (code.length !== 4) { err('err-home','Enter the 4-character room code.'); return; }
+  if (!myName) { setErr('err-home', 'Enter your name first.'); return; }
+  if (code.length !== 4) { setErr('err-home', 'Enter the 4-character room code.'); return; }
   clearErr('err-home');
-
-  const roomRef = db.ref('rooms/' + code);
-  const snap = await roomRef.once('value');
+ 
+  const roomRef = ref(db, 'rooms/' + code);
+  const snap = await get(roomRef);
   const room = snap.val();
-
-  if (!room) { err('err-home','Room not found. Check the code.'); return; }
-  if (room.status === 'roles_assigned') { err('err-home','Game already started.'); return; }
-
-  const currentPlayers = room.players ? Object.keys(room.players) : [];
-  if (currentPlayers.length >= 3) { err('err-home','Room is full (3/3).'); return; }
-  if (currentPlayers.includes(myName)) { err('err-home','That name is taken in this room.'); return; }
-
+ 
+  if (!room) { setErr('err-home', 'Room not found. Check the code.'); return; }
+  if (room.status === 'roles_assigned') { setErr('err-home', 'Game already started.'); return; }
+  const names = room.players ? Object.keys(room.players) : [];
+  if (names.length >= 3) { setErr('err-home', 'Room is full (3/3).'); return; }
+  if (names.includes(myName)) { setErr('err-home', 'That name is taken — try a different one.'); return; }
+ 
   myCode = code;
   isHost = false;
-
-  await db.ref('rooms/' + code + '/players/' + myName).set(true);
-
+  await set(ref(db, 'rooms/' + code + '/players/' + myName), true);
   document.getElementById('disp-code-guest').textContent = myCode;
   show('s-guest');
   listenRoom();
 }
-
-// ─── Listen to Room Changes ───────────────────────────────────────────────────
+ 
 function listenRoom() {
   stopListener();
-  const roomRef = db.ref('rooms/' + myCode);
-
-  const handler = roomRef.on('value', snap => {
+  activeRef = ref(db, 'rooms/' + myCode);
+  activeHandler = onValue(activeRef, snap => {
     const room = snap.val();
     if (!room) return;
-
-    const playerNames = room.players ? Object.keys(room.players) : [];
-
-    // Update player lists
-    ['host-players','guest-players'].forEach(listId => {
-      const el = document.getElementById(listId);
-      if (!el) return;
-      el.innerHTML = playerNames.map((p,i) =>
-        `<li>${p}${i===0 ? ' <span style="font-size:0.7rem;color:#999">(host)</span>' : ''}</li>`
-      ).join('');
-    });
-
+    renderPlayers('host-players', room.players, true);
+    renderPlayers('guest-players', room.players, true);
     if (isHost) {
-      const need = 3 - playerNames.length;
+      const count = room.players ? Object.keys(room.players).length : 0;
+      const need = 3 - count;
       const statusEl = document.getElementById('host-status');
       const btnStart = document.getElementById('btn-start');
       if (need > 0) {
@@ -250,48 +233,30 @@ function listenRoom() {
         btnStart.style.display = 'block';
       }
     }
-
-    // If game started, show role
-    if (room.status === 'roles_assigned' && room.roles) {
-      const myRole = room.roles[myName];
-      if (myRole) {
-        stopListener();
-        showRole(myRole);
-      }
+    if (room.status === 'roles_assigned' && room.roles && room.roles[myName]) {
+      stopListener();
+      showRole(room.roles[myName]);
     }
   });
-
-  unsubscribe = () => roomRef.off('value', handler);
 }
-
-// ─── Start Game (host only) ───────────────────────────────────────────────────
-async function doStart() {
-  const snap = await db.ref('rooms/' + myCode).once('value');
+ 
+window.doStart = async function() {
+  const snap = await get(ref(db, 'rooms/' + myCode));
   const room = snap.val();
-  if (!room) { err('err-host','Room error.'); return; }
-
-  const playerNames = Object.keys(room.players || {});
-  if (playerNames.length < 3) { err('err-host','Need 3 players first.'); return; }
-
+  if (!room) { setErr('err-host', 'Room error.'); return; }
+  const names = Object.keys(room.players || {});
+  if (names.length < 3) { setErr('err-host', 'Need 3 players first.'); return; }
   const number = Math.floor(Math.random() * 201);
-  const shuffled = [...playerNames].sort(() => Math.random() - 0.5);
-  const impostorName = shuffled[0];
-
+  const shuffled = [...names].sort(() => Math.random() - 0.5);
+  const impostor = shuffled[0];
   const roles = {};
-  playerNames.forEach(name => {
-    roles[name] = name === impostorName
-      ? { type: 'impostor' }
-      : { type: 'number', value: number };
-  });
-
-  await db.ref('rooms/' + myCode).update({ status: 'roles_assigned', roles });
+  names.forEach(n => { roles[n] = n === impostor ? { type: 'impostor' } : { type: 'number', value: number }; });
+  await update(ref(db, 'rooms/' + myCode), { status: 'roles_assigned', roles });
 }
-
-// ─── Show Role ────────────────────────────────────────────────────────────────
+ 
 function showRole(role) {
   const tag = document.getElementById('role-tag');
   const val = document.getElementById('role-val');
-
   if (role.type === 'impostor') {
     tag.textContent = 'You are the';
     val.textContent = 'IMPOSTOR';
@@ -303,68 +268,23 @@ function showRole(role) {
   }
   show('s-role');
 }
-
-function goReady() { show('s-ready'); }
-
-// ─── Play Again ───────────────────────────────────────────────────────────────
-function doPlayAgain() {
+ 
+window.doPlayAgain = function() {
   stopListener();
-  myName = document.getElementById('in-name').value || myName;
   myCode = '';
   isHost = false;
   document.getElementById('in-code').value = '';
-  document.getElementById('err-home').textContent = '';
+  clearErr('err-home');
   show('s-home');
 }
-
-// ─── Auto-cleanup: remove rooms older than 3 hours ───────────────────────────
-// (Firebase free tier has 1GB storage, rooms are tiny — this just keeps it tidy)
-(async function cleanup() {
-  try {
-    const cutoff = Date.now() - 3 * 60 * 60 * 1000;
-    const snap = await db.ref('rooms').orderByChild('createdAt').endAt(cutoff).once('value');
-    snap.forEach(child => child.ref.remove());
-  } catch(e) {}
-})();
-
-/*
-=======================================================================
-  SETUP INSTRUCTIONS (one-time, takes ~5 minutes)
-=======================================================================
-
-1. Go to https://console.firebase.google.com
-2. Click "Create a project" — name it anything (e.g. "impostor-game")
-   - Disable Google Analytics (not needed)
-3. In your project, click "Realtime Database" in the left sidebar
-   - Click "Create Database"
-   - Choose any location, pick "Start in TEST MODE" (allows read/write)
-   - Click "Enable"
-4. Click the gear icon → "Project settings"
-   - Scroll down to "Your apps" → click the </> web icon
-   - Register app (any nickname), skip Firebase Hosting
-   - Copy the firebaseConfig object shown
-5. Replace the firebaseConfig at the top of this file with yours
-6. Save the file as "index.html" and upload to GitHub Pages (see below)
-
-=======================================================================
-  GITHUB PAGES SETUP
-=======================================================================
-
-1. Go to github.com → sign up (free)
-2. Click + → New repository
-   - Name: impostor-game
-   - Public ✓
-   - Add README ✓
-   - Create repository
-3. Click "Add file" → "Upload files"
-   - Upload this file
-4. After uploading, click the file → pencil icon → rename to "index.html" → commit
-5. Settings → Pages → Source: Deploy from branch → main / (root) → Save
-6. Wait ~60 seconds → your URL: https://yourusername.github.io/impostor-game
-7. Share that URL with everyone — they open it on their phones and it syncs live
-
-=======================================================================
-*/
+ 
+// Cleanup old rooms
+try {
+  const cutoff = Date.now() - 3 * 60 * 60 * 1000;
+  const old = query(ref(db, 'rooms'), orderByChild('createdAt'), endAt(cutoff));
+  get(old).then(snap => snap.forEach(c => remove(c.ref))).catch(()=>{});
+} catch(e) {}
+ 
 </script>
 </body>
 </html>
