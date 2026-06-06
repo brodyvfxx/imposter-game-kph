@@ -2,474 +2,369 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Impostor Number Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Impostor</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: #fff;
-    color: #000;
-    font-family: 'Courier New', Courier, monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    font-size: 16px;
-  }
-
-  h1 {
-    font-size: 1.4rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-    text-align: center;
-  }
-
-  #app {
-    width: 100%;
-    max-width: 400px;
-  }
-
-  .section {
-    display: none;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .section.active {
-    display: flex;
-  }
-
-  label {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-    display: block;
-  }
-
-  input[type="text"] {
-    width: 100%;
-    border: 2px solid #000;
-    background: #fff;
-    color: #000;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 1rem;
-    padding: 10px 12px;
-    outline: none;
-  }
-  input[type="text"]:focus {
-    background: #f0f0f0;
-  }
-
-  button {
-    width: 100%;
-    border: 2px solid #000;
-    background: #000;
-    color: #fff;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 12px;
-    cursor: pointer;
-  }
-  button:hover { background: #333; }
-  button.secondary {
-    background: #fff;
-    color: #000;
-  }
-  button.secondary:hover { background: #f0f0f0; }
-
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.8rem;
-  }
-  .divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    border-top: 1px solid #000;
-  }
-
-  .status-box {
-    border: 2px solid #000;
-    padding: 16px;
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-
-  .player-list {
-    list-style: none;
-    border: 2px solid #000;
-  }
-  .player-list li {
-    padding: 10px 14px;
-    border-bottom: 1px solid #ccc;
-    font-size: 0.9rem;
-  }
-  .player-list li:last-child { border-bottom: none; }
-
-  .role-reveal {
-    border: 2px solid #000;
-    padding: 24px;
-    text-align: center;
-  }
-  .role-reveal .role-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 12px;
-  }
-  .role-reveal .role-value {
-    font-size: 3rem;
-    font-weight: bold;
-    letter-spacing: 0.05em;
-  }
-  .role-reveal .role-value.impostor {
-    font-size: 1.6rem;
-    letter-spacing: 0.2em;
-  }
-
-  .small {
-    font-size: 0.75rem;
-    color: #555;
-    line-height: 1.5;
-  }
-
-  .code-display {
-    font-size: 2rem;
-    letter-spacing: 0.3em;
-    font-weight: bold;
-    text-align: center;
-    padding: 12px;
-    border: 2px dashed #000;
-  }
-
-  #msg {
-    font-size: 0.8rem;
-    color: #c00;
-    min-height: 1.2em;
-  }
-
-  .waiting-dots::after {
-    content: '...';
-    animation: dots 1.2s steps(4, end) infinite;
-  }
-  @keyframes dots {
-    0%, 100% { content: '.'; }
-    33% { content: '..'; }
-    66% { content: '...'; }
-  }
-
-  .rules {
-    border: 1px solid #ccc;
-    padding: 14px;
-    font-size: 0.78rem;
-    line-height: 1.7;
-    color: #333;
-  }
-  .rules strong { color: #000; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #fff;
+  color: #000;
+  font-family: 'Courier New', Courier, monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+}
+#app { width: 100%; max-width: 380px; }
+h1 { font-size: 1.3rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 28px; text-align: center; }
+.screen { display: none; flex-direction: column; gap: 14px; }
+.screen.active { display: flex; }
+label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 5px; }
+input[type="text"] {
+  width: 100%; border: 2px solid #000; background: #fff; color: #000;
+  font-family: 'Courier New', Courier, monospace; font-size: 1rem;
+  padding: 10px 12px; outline: none;
+}
+input[type="text"]:focus { background: #f5f5f5; }
+button {
+  width: 100%; border: 2px solid #000; background: #000; color: #fff;
+  font-family: 'Courier New', Courier, monospace; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: 0.12em; padding: 12px; cursor: pointer;
+}
+button:hover { background: #222; }
+button:disabled { background: #888; border-color: #888; cursor: not-allowed; }
+button.ghost { background: #fff; color: #000; }
+button.ghost:hover { background: #f0f0f0; }
+.divider { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: #888; }
+.divider::before, .divider::after { content: ''; flex: 1; border-top: 1px solid #ccc; }
+.box { border: 2px solid #000; padding: 16px; }
+.player-list { list-style: none; }
+.player-list li { padding: 8px 0; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+.player-list li:last-child { border-bottom: none; }
+.code-big { font-size: 2.5rem; font-weight: bold; letter-spacing: 0.4em; text-align: center; padding: 14px; border: 2px dashed #000; }
+.role-box { border: 2px solid #000; padding: 28px 20px; text-align: center; }
+.role-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: #555; margin-bottom: 10px; }
+.role-val { font-size: 3.5rem; font-weight: bold; }
+.role-val.word { font-size: 1.6rem; letter-spacing: 0.2em; }
+.hint { font-size: 0.75rem; color: #666; line-height: 1.6; }
+.err { font-size: 0.78rem; color: #c00; min-height: 1em; }
+.rules-box { border: 1px solid #ccc; padding: 14px; font-size: 0.76rem; line-height: 1.7; color: #333; }
+.rules-box b { color: #000; }
+.dot-anim::after { content: ''; animation: dots 1.2s steps(3, end) infinite; }
+@keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } 100% { content: '.'; } }
+.waiting { text-align: center; font-size: 0.85rem; color: #555; padding: 8px 0; }
 </style>
 </head>
 <body>
-
 <div id="app">
   <h1>Impostor</h1>
 
-  <!-- SCREEN: Home -->
-  <div id="screen-home" class="section active">
-    <div class="rules">
-      <strong>How to play:</strong><br>
+  <!-- HOME -->
+  <div id="s-home" class="screen active">
+    <div class="rules-box">
+      <b>How to play:</b><br>
       2 players get the same secret number (0–200).<br>
-      1 player is the IMPOSTOR — they don't get the number.<br>
-      Everyone gives clues. Vote for who you think is faking it.
+      1 player gets IMPOSTOR — they don't know the number.<br>
+      Give clues. Vote on who's faking it.
     </div>
     <div>
       <label>Your name</label>
-      <input type="text" id="home-name" placeholder="Enter your name" maxlength="16" autocomplete="off">
+      <input type="text" id="in-name" placeholder="Enter your name" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-    <button onclick="createRoom()">Create Room</button>
-    <div class="divider">or</div>
+    <button onclick="doCreate()">Create Room</button>
+    <div class="divider">or join</div>
     <div>
       <label>Room code</label>
-      <input type="text" id="join-code" placeholder="e.g. AB12" maxlength="4" style="text-transform:uppercase" autocomplete="off">
+      <input type="text" id="in-code" placeholder="4-letter code" maxlength="4" style="text-transform:uppercase;letter-spacing:0.2em;font-size:1.3rem" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-    <button class="secondary" onclick="joinRoom()">Join Room</button>
-    <div id="msg"></div>
+    <button class="ghost" onclick="doJoin()">Join Room</button>
+    <div class="err" id="err-home"></div>
   </div>
 
-  <!-- SCREEN: Lobby (host) -->
-  <div id="screen-lobby-host" class="section">
-    <p class="small">Share this code with the other players:</p>
-    <div class="code-display" id="lobby-code-display"></div>
-    <div class="status-box">
-      <strong>Players joined:</strong>
-      <ul class="player-list" id="lobby-player-list" style="margin-top:8px"></ul>
+  <!-- LOBBY HOST -->
+  <div id="s-host" class="screen">
+    <p class="hint">Share this code with your friends:</p>
+    <div class="code-big" id="disp-code"></div>
+    <div class="box">
+      <label>Players joined</label>
+      <ul class="player-list" id="host-players"></ul>
     </div>
-    <p class="small" id="lobby-host-status">Waiting for 2 more players<span class="waiting-dots"></span></p>
-    <button id="btn-start" onclick="startGame()" style="display:none">Assign Roles</button>
-    <div id="msg2"></div>
+    <p class="waiting" id="host-status">Waiting for players<span class="dot-anim"></span></p>
+    <button id="btn-start" onclick="doStart()" style="display:none">Assign Roles</button>
+    <div class="err" id="err-host"></div>
   </div>
 
-  <!-- SCREEN: Lobby (guest) -->
-  <div id="screen-lobby-guest" class="section">
-    <p class="small">You joined room:</p>
-    <div class="code-display" id="guest-code-display"></div>
-    <div class="status-box">
-      <strong>Players joined:</strong>
-      <ul class="player-list" id="guest-player-list" style="margin-top:8px"></ul>
+  <!-- LOBBY GUEST -->
+  <div id="s-guest" class="screen">
+    <p class="hint">You joined:</p>
+    <div class="code-big" id="disp-code-guest"></div>
+    <div class="box">
+      <label>Players joined</label>
+      <ul class="player-list" id="guest-players"></ul>
     </div>
-    <p class="small">Waiting for host to start<span class="waiting-dots"></span></p>
+    <p class="waiting">Waiting for host to start<span class="dot-anim"></span></p>
   </div>
 
-  <!-- SCREEN: Role Reveal -->
-  <div id="screen-role" class="section">
-    <p class="small" style="text-align:center">YOUR ROLE — show only yourself</p>
-    <div class="role-reveal">
-      <div class="role-label" id="role-label"></div>
-      <div class="role-value" id="role-value"></div>
+  <!-- ROLE REVEAL -->
+  <div id="s-role" class="screen">
+    <p class="hint" style="text-align:center">👁 Look at this alone — don't show others</p>
+    <div class="role-box">
+      <div class="role-tag" id="role-tag"></div>
+      <div class="role-val" id="role-val"></div>
     </div>
-    <p class="small" style="text-align:center">Tap below when you're ready (don't show others)</p>
-    <button class="secondary" onclick="showScreen('screen-waiting-ready')">I've seen my role ✓</button>
+    <button class="ghost" onclick="goReady()">I've seen my role — hide it</button>
   </div>
 
-  <!-- SCREEN: Waiting for all to confirm -->
-  <div id="screen-waiting-ready" class="section">
-    <div class="status-box" style="text-align:center">
-      Game is live.<br>Give clues. Vote for the impostor.
+  <!-- READY / GAME ON -->
+  <div id="s-ready" class="screen">
+    <div class="box" style="text-align:center;padding:24px">
+      Game is live.<br><br>
+      Give clues about your number<br>without saying it directly.<br><br>
+      Vote for who you think is faking.
     </div>
-    <button onclick="playAgain()">Play Again</button>
+    <button onclick="doPlayAgain()">Play Again</button>
   </div>
 
 </div>
 
+<!-- Firebase v9 compat (works as global firebase.*) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-// ─── Simple peer sync via BroadcastChannel + localStorage ───────────────────
-// Works when everyone opens the same HTML file locally,
-// OR we fall back to a shareable URL-based approach.
+// ─── Firebase config (shared public project for this game) ───────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyC6oDnf-gV15C90KhNkrm7aGgLwUlbX2Mw",
+  authDomain: "imposter-game-kph-72602.firebaseapp.com",
+  databaseURL: "https://imposter-game-kph-72602-default-rtdb.firebaseio.com",
+  projectId: "imposter-game-kph-72602",
+  storageBucket: "imposter-game-kph-72602.firebasestorage.app",
+  messagingSenderId: "589210062434",
+  appId: "1:589210062434:web:7cfaa042af90dbf876cb3b"
+};
 
-// Since this is a local HTML file shared across phones on the same WiFi
-// we use a simple polling approach with a free realtime backend (jsonbin or similar).
-// ACTUALLY — simplest possible: we embed a tiny Firebase-free sync
-// using a public pastebin-style API that requires no signup.
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// We'll use https://api.jsonbin.io free tier with a hardcoded public key
-// OR better: use localStorage + URL sharing with manual "refresh to sync" UX.
-
-// FINAL DECISION: Use the cleanest no-server approach:
-// Host encodes game state into a shareable URL. Players open that URL.
-// For role assignment, host generates all roles and encodes them in URL fragments
-// so each player gets a unique link. Simple, no server needed.
-
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// ─── State ────────────────────────────────────────────────────────────────────
 let myName = '';
-let myRole = null; // { type: 'number', value: N } or { type: 'impostor' }
-let roomCode = '';
+let myCode = '';
 let isHost = false;
-let players = [];
-let pollTimer = null;
+let unsubscribe = null;
 
-// Storage key helpers
-const storeKey = code => `impostor_room_${code}`;
-
-function getRoomData(code) {
-  try { return JSON.parse(localStorage.getItem(storeKey(code)) || 'null'); } catch { return null; }
-}
-function setRoomData(code, data) {
-  localStorage.setItem(storeKey(code), JSON.stringify(data));
-}
-
-function rand4() {
-  return Math.random().toString(36).substring(2, 4).toUpperCase() +
-         Math.floor(Math.random() * 90 + 10);
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-
-function setMsg(id, txt) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = txt;
+function err(id, msg) { document.getElementById(id).textContent = msg; }
+function clearErr(id) { document.getElementById(id).textContent = ''; }
+function rand4() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
 }
+function stopListener() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } }
 
-// ─── CREATE ROOM ─────────────────────────────────────────────────────────────
-function createRoom() {
-  myName = document.getElementById('home-name').value.trim();
-  if (!myName) { setMsg('msg', 'Enter your name first.'); return; }
+// ─── Create Room ─────────────────────────────────────────────────────────────
+async function doCreate() {
+  myName = document.getElementById('in-name').value.trim();
+  if (!myName) { err('err-home','Enter your name first.'); return; }
+  clearErr('err-home');
 
-  roomCode = rand4();
+  myCode = rand4();
   isHost = true;
-  players = [myName];
 
-  setRoomData(roomCode, {
-    players: [myName],
-    status: 'waiting', // waiting | roles_assigned
+  const roomRef = db.ref('rooms/' + myCode);
+  await roomRef.set({
+    players: { [myName]: true },
+    status: 'waiting',
     roles: null,
-    created: Date.now()
+    createdAt: Date.now()
   });
 
-  document.getElementById('lobby-code-display').textContent = roomCode;
-  showScreen('screen-lobby-host');
-  startPollingLobby();
+  document.getElementById('disp-code').textContent = myCode;
+  show('s-host');
+  listenRoom();
 }
 
-// ─── JOIN ROOM ────────────────────────────────────────────────────────────────
-function joinRoom() {
-  myName = document.getElementById('home-name').value.trim();
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (!myName) { setMsg('msg', 'Enter your name first.'); return; }
-  if (code.length !== 4) { setMsg('msg', 'Enter a 4-character room code.'); return; }
+// ─── Join Room ────────────────────────────────────────────────────────────────
+async function doJoin() {
+  myName = document.getElementById('in-name').value.trim();
+  const code = document.getElementById('in-code').value.trim().toUpperCase();
+  if (!myName) { err('err-home','Enter your name first.'); return; }
+  if (code.length !== 4) { err('err-home','Enter the 4-character room code.'); return; }
+  clearErr('err-home');
 
-  const room = getRoomData(code);
-  if (!room) { setMsg('msg', 'Room not found. Check the code.'); return; }
-  if (room.players.length >= 3) { setMsg('msg', 'Room is full (3/3).'); return; }
-  if (room.status === 'roles_assigned') { setMsg('msg', 'Game already started.'); return; }
+  const roomRef = db.ref('rooms/' + code);
+  const snap = await roomRef.once('value');
+  const room = snap.val();
 
-  roomCode = code;
+  if (!room) { err('err-home','Room not found. Check the code.'); return; }
+  if (room.status === 'roles_assigned') { err('err-home','Game already started.'); return; }
+
+  const currentPlayers = room.players ? Object.keys(room.players) : [];
+  if (currentPlayers.length >= 3) { err('err-home','Room is full (3/3).'); return; }
+  if (currentPlayers.includes(myName)) { err('err-home','That name is taken in this room.'); return; }
+
+  myCode = code;
   isHost = false;
 
-  // Add player
-  if (!room.players.includes(myName)) {
-    room.players.push(myName);
-  }
-  setRoomData(code, room);
-  players = room.players;
+  await db.ref('rooms/' + code + '/players/' + myName).set(true);
 
-  document.getElementById('guest-code-display').textContent = roomCode;
-  showScreen('screen-lobby-guest');
-  startPollingLobby();
+  document.getElementById('disp-code-guest').textContent = myCode;
+  show('s-guest');
+  listenRoom();
 }
 
-// ─── POLLING ─────────────────────────────────────────────────────────────────
-function startPollingLobby() {
-  clearInterval(pollTimer);
-  pollTimer = setInterval(pollLobby, 1200);
-  pollLobby();
-}
+// ─── Listen to Room Changes ───────────────────────────────────────────────────
+function listenRoom() {
+  stopListener();
+  const roomRef = db.ref('rooms/' + myCode);
 
-function pollLobby() {
-  const room = getRoomData(roomCode);
-  if (!room) return;
+  const handler = roomRef.on('value', snap => {
+    const room = snap.val();
+    if (!room) return;
 
-  players = room.players;
+    const playerNames = room.players ? Object.keys(room.players) : [];
 
-  // Update player lists
-  ['lobby-player-list', 'guest-player-list'].forEach(listId => {
-    const el = document.getElementById(listId);
-    if (!el) return;
-    el.innerHTML = players.map((p, i) =>
-      `<li>${p}${i === 0 ? ' <span style="font-size:0.7rem;color:#888">(host)</span>' : ''}</li>`
-    ).join('');
+    // Update player lists
+    ['host-players','guest-players'].forEach(listId => {
+      const el = document.getElementById(listId);
+      if (!el) return;
+      el.innerHTML = playerNames.map((p,i) =>
+        `<li>${p}${i===0 ? ' <span style="font-size:0.7rem;color:#999">(host)</span>' : ''}</li>`
+      ).join('');
+    });
+
+    if (isHost) {
+      const need = 3 - playerNames.length;
+      const statusEl = document.getElementById('host-status');
+      const btnStart = document.getElementById('btn-start');
+      if (need > 0) {
+        statusEl.innerHTML = `Waiting for ${need} more player${need>1?'s':''}<span class="dot-anim"></span>`;
+        btnStart.style.display = 'none';
+      } else {
+        statusEl.textContent = '3 players ready!';
+        btnStart.style.display = 'block';
+      }
+    }
+
+    // If game started, show role
+    if (room.status === 'roles_assigned' && room.roles) {
+      const myRole = room.roles[myName];
+      if (myRole) {
+        stopListener();
+        showRole(myRole);
+      }
+    }
   });
 
-  if (isHost) {
-    const statusEl = document.getElementById('lobby-host-status');
-    const btnStart = document.getElementById('btn-start');
-    const need = 3 - players.length;
-    if (need > 0) {
-      statusEl.innerHTML = `Waiting for ${need} more player${need > 1 ? 's' : ''}<span class="waiting-dots"></span>`;
-      btnStart.style.display = 'none';
-    } else {
-      statusEl.textContent = '3 players joined — ready!';
-      btnStart.style.display = 'block';
-    }
-  }
-
-  // Guest: check if game started
-  if (!isHost && room.status === 'roles_assigned' && room.roles) {
-    clearInterval(pollTimer);
-    receiveRole(room.roles);
-  }
+  unsubscribe = () => roomRef.off('value', handler);
 }
 
-// ─── START GAME (HOST) ───────────────────────────────────────────────────────
-function startGame() {
-  const room = getRoomData(roomCode);
-  if (!room || room.players.length < 3) {
-    setMsg('msg2', 'Need 3 players first.');
-    return;
-  }
+// ─── Start Game (host only) ───────────────────────────────────────────────────
+async function doStart() {
+  const snap = await db.ref('rooms/' + myCode).once('value');
+  const room = snap.val();
+  if (!room) { err('err-host','Room error.'); return; }
 
-  const number = Math.floor(Math.random() * 201); // 0–200
-  const shuffled = [...room.players].sort(() => Math.random() - 0.5);
+  const playerNames = Object.keys(room.players || {});
+  if (playerNames.length < 3) { err('err-host','Need 3 players first.'); return; }
+
+  const number = Math.floor(Math.random() * 201);
+  const shuffled = [...playerNames].sort(() => Math.random() - 0.5);
   const impostorName = shuffled[0];
 
   const roles = {};
-  room.players.forEach(name => {
+  playerNames.forEach(name => {
     roles[name] = name === impostorName
       ? { type: 'impostor' }
       : { type: 'number', value: number };
   });
 
-  room.roles = roles;
-  room.status = 'roles_assigned';
-  setRoomData(roomCode, room);
-
-  clearInterval(pollTimer);
-  myRole = roles[myName];
-  showRoleScreen();
+  await db.ref('rooms/' + myCode).update({ status: 'roles_assigned', roles });
 }
 
-// ─── RECEIVE ROLE (GUEST) ────────────────────────────────────────────────────
-function receiveRole(roles) {
-  myRole = roles[myName];
-  if (!myRole) {
-    // name mismatch fallback
-    setMsg('msg', 'Could not find your role. Rejoin with exact same name.');
-    return;
-  }
-  showRoleScreen();
-}
+// ─── Show Role ────────────────────────────────────────────────────────────────
+function showRole(role) {
+  const tag = document.getElementById('role-tag');
+  const val = document.getElementById('role-val');
 
-// ─── SHOW ROLE ────────────────────────────────────────────────────────────────
-function showRoleScreen() {
-  showScreen('screen-role');
-  const label = document.getElementById('role-label');
-  const value = document.getElementById('role-value');
-
-  if (myRole.type === 'impostor') {
-    label.textContent = 'You are';
-    value.textContent = 'IMPOSTOR';
-    value.classList.add('impostor');
+  if (role.type === 'impostor') {
+    tag.textContent = 'You are the';
+    val.textContent = 'IMPOSTOR';
+    val.className = 'role-val word';
   } else {
-    label.textContent = 'Your number is';
-    value.textContent = myRole.value;
-    value.classList.remove('impostor');
+    tag.textContent = 'Your number is';
+    val.textContent = role.value;
+    val.className = 'role-val';
   }
+  show('s-role');
 }
 
-// ─── PLAY AGAIN ──────────────────────────────────────────────────────────────
-function playAgain() {
-  clearInterval(pollTimer);
-  myRole = null;
-  roomCode = '';
+function goReady() { show('s-ready'); }
+
+// ─── Play Again ───────────────────────────────────────────────────────────────
+function doPlayAgain() {
+  stopListener();
+  myName = document.getElementById('in-name').value || myName;
+  myCode = '';
   isHost = false;
-  players = [];
-  document.getElementById('home-name').value = myName;
-  document.getElementById('join-code').value = '';
-  setMsg('msg', '');
-  showScreen('screen-home');
+  document.getElementById('in-code').value = '';
+  document.getElementById('err-home').textContent = '';
+  show('s-home');
 }
 
-// ─── CLEAN UP OLD ROOMS ───────────────────────────────────────────────────────
-// Remove rooms older than 2 hours from localStorage
-(function cleanup() {
-  const now = Date.now();
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith('impostor_room_')) {
-      try {
-        const d = JSON.parse(localStorage.getItem(k));
-        if (d && now - d.created > 7200000) localStorage.removeItem(k);
-      } catch {}
-    }
-  });
+// ─── Auto-cleanup: remove rooms older than 3 hours ───────────────────────────
+// (Firebase free tier has 1GB storage, rooms are tiny — this just keeps it tidy)
+(async function cleanup() {
+  try {
+    const cutoff = Date.now() - 3 * 60 * 60 * 1000;
+    const snap = await db.ref('rooms').orderByChild('createdAt').endAt(cutoff).once('value');
+    snap.forEach(child => child.ref.remove());
+  } catch(e) {}
 })();
+
+/*
+=======================================================================
+  SETUP INSTRUCTIONS (one-time, takes ~5 minutes)
+=======================================================================
+
+1. Go to https://console.firebase.google.com
+2. Click "Create a project" — name it anything (e.g. "impostor-game")
+   - Disable Google Analytics (not needed)
+3. In your project, click "Realtime Database" in the left sidebar
+   - Click "Create Database"
+   - Choose any location, pick "Start in TEST MODE" (allows read/write)
+   - Click "Enable"
+4. Click the gear icon → "Project settings"
+   - Scroll down to "Your apps" → click the </> web icon
+   - Register app (any nickname), skip Firebase Hosting
+   - Copy the firebaseConfig object shown
+5. Replace the firebaseConfig at the top of this file with yours
+6. Save the file as "index.html" and upload to GitHub Pages (see below)
+
+=======================================================================
+  GITHUB PAGES SETUP
+=======================================================================
+
+1. Go to github.com → sign up (free)
+2. Click + → New repository
+   - Name: impostor-game
+   - Public ✓
+   - Add README ✓
+   - Create repository
+3. Click "Add file" → "Upload files"
+   - Upload this file
+4. After uploading, click the file → pencil icon → rename to "index.html" → commit
+5. Settings → Pages → Source: Deploy from branch → main / (root) → Save
+6. Wait ~60 seconds → your URL: https://yourusername.github.io/impostor-game
+7. Share that URL with everyone — they open it on their phones and it syncs live
+
+=======================================================================
+*/
 </script>
 </body>
 </html>
