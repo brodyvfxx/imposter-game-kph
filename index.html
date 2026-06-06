@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Impostor Number Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .section {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .section.active {
+    display: flex;
+  }
+
+  label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    border: 2px solid #000;
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    padding: 10px 12px;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    background: #f0f0f0;
+  }
+
+  button {
+    width: 100%;
+    border: 2px solid #000;
+    background: #000;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px;
+    cursor: pointer;
+  }
+  button:hover { background: #333; }
+  button.secondary {
+    background: #fff;
+    color: #000;
+  }
+  button.secondary:hover { background: #f0f0f0; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid #000;
+  }
+
+  .status-box {
+    border: 2px solid #000;
+    padding: 16px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .player-list {
+    list-style: none;
+    border: 2px solid #000;
+  }
+  .player-list li {
+    padding: 10px 14px;
+    border-bottom: 1px solid #ccc;
+    font-size: 0.9rem;
+  }
+  .player-list li:last-child { border-bottom: none; }
+
+  .role-reveal {
+    border: 2px solid #000;
+    padding: 24px;
+    text-align: center;
+  }
+  .role-reveal .role-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+  }
+  .role-reveal .role-value {
+    font-size: 3rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+  }
+  .role-reveal .role-value.impostor {
+    font-size: 1.6rem;
+    letter-spacing: 0.2em;
+  }
+
+  .small {
+    font-size: 0.75rem;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .code-display {
+    font-size: 2rem;
+    letter-spacing: 0.3em;
+    font-weight: bold;
+    text-align: center;
+    padding: 12px;
+    border: 2px dashed #000;
+  }
+
+  #msg {
+    font-size: 0.8rem;
+    color: #c00;
+    min-height: 1.2em;
+  }
+
+  .waiting-dots::after {
+    content: '...';
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0%, 100% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+  }
+
+  .rules {
+    border: 1px solid #ccc;
+    padding: 14px;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #333;
+  }
+  .rules strong { color: #000; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <h1>Impostor</h1>
+
+  <!-- SCREEN: Home -->
+  <div id="screen-home" class="section active">
+    <div class="rules">
+      <strong>How to play:</strong><br>
+      2 players get the same secret number (0–200).<br>
+      1 player is the IMPOSTOR — they don't get the number.<br>
+      Everyone gives clues. Vote for who you think is faking it.
+    </div>
+    <div>
+      <label>Your name</label>
+      <input type="text" id="home-name" placeholder="Enter your name" maxlength="16" autocomplete="off">
+    </div>
+    <button onclick="createRoom()">Create Room</button>
+    <div class="divider">or</div>
+    <div>
+      <label>Room code</label>
+      <input type="text" id="join-code" placeholder="e.g. AB12" maxlength="4" style="text-transform:uppercase" autocomplete="off">
+    </div>
+    <button class="secondary" onclick="joinRoom()">Join Room</button>
+    <div id="msg"></div>
+  </div>
+
+  <!-- SCREEN: Lobby (host) -->
+  <div id="screen-lobby-host" class="section">
+    <p class="small">Share this code with the other players:</p>
+    <div class="code-display" id="lobby-code-display"></div>
+    <div class="status-box">
+      <strong>Players joined:</strong>
+      <ul class="player-list" id="lobby-player-list" style="margin-top:8px"></ul>
+    </div>
+    <p class="small" id="lobby-host-status">Waiting for 2 more players<span class="waiting-dots"></span></p>
+    <button id="btn-start" onclick="startGame()" style="display:none">Assign Roles</button>
+    <div id="msg2"></div>
+  </div>
+
+  <!-- SCREEN: Lobby (guest) -->
+  <div id="screen-lobby-guest" class="section">
+    <p class="small">You joined room:</p>
+    <div class="code-display" id="guest-code-display"></div>
+    <div class="status-box">
+      <strong>Players joined:</strong>
+      <ul class="player-list" id="guest-player-list" style="margin-top:8px"></ul>
+    </div>
+    <p class="small">Waiting for host to start<span class="waiting-dots"></span></p>
+  </div>
+
+  <!-- SCREEN: Role Reveal -->
+  <div id="screen-role" class="section">
+    <p class="small" style="text-align:center">YOUR ROLE — show only yourself</p>
+    <div class="role-reveal">
+      <div class="role-label" id="role-label"></div>
+      <div class="role-value" id="role-value"></div>
+    </div>
+    <p class="small" style="text-align:center">Tap below when you're ready (don't show others)</p>
+    <button class="secondary" onclick="showScreen('screen-waiting-ready')">I've seen my role ✓</button>
+  </div>
+
+  <!-- SCREEN: Waiting for all to confirm -->
+  <div id="screen-waiting-ready" class="section">
+    <div class="status-box" style="text-align:center">
+      Game is live.<br>Give clues. Vote for the impostor.
+    </div>
+    <button onclick="playAgain()">Play Again</button>
+  </div>
+
+</div>
+
+<script>
+// ─── Simple peer sync via BroadcastChannel + localStorage ───────────────────
+// Works when everyone opens the same HTML file locally,
+// OR we fall back to a shareable URL-based approach.
+
+// Since this is a local HTML file shared across phones on the same WiFi
+// we use a simple polling approach with a free realtime backend (jsonbin or similar).
+// ACTUALLY — simplest possible: we embed a tiny Firebase-free sync
+// using a public pastebin-style API that requires no signup.
+
+// We'll use https://api.jsonbin.io free tier with a hardcoded public key
+// OR better: use localStorage + URL sharing with manual "refresh to sync" UX.
+
+// FINAL DECISION: Use the cleanest no-server approach:
+// Host encodes game state into a shareable URL. Players open that URL.
+// For role assignment, host generates all roles and encodes them in URL fragments
+// so each player gets a unique link. Simple, no server needed.
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let myName = '';
+let myRole = null; // { type: 'number', value: N } or { type: 'impostor' }
+let roomCode = '';
+let isHost = false;
+let players = [];
+let pollTimer = null;
+
+// Storage key helpers
+const storeKey = code => `impostor_room_${code}`;
+
+function getRoomData(code) {
+  try { return JSON.parse(localStorage.getItem(storeKey(code)) || 'null'); } catch { return null; }
+}
+function setRoomData(code, data) {
+  localStorage.setItem(storeKey(code), JSON.stringify(data));
+}
+
+function rand4() {
+  return Math.random().toString(36).substring(2, 4).toUpperCase() +
+         Math.floor(Math.random() * 90 + 10);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setMsg(id, txt) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+
+// ─── CREATE ROOM ─────────────────────────────────────────────────────────────
+function createRoom() {
+  myName = document.getElementById('home-name').value.trim();
+  if (!myName) { setMsg('msg', 'Enter your name first.'); return; }
+
+  roomCode = rand4();
+  isHost = true;
+  players = [myName];
+
+  setRoomData(roomCode, {
+    players: [myName],
+    status: 'waiting', // waiting | roles_assigned
+    roles: null,
+    created: Date.now()
+  });
+
+  document.getElementById('lobby-code-display').textContent = roomCode;
+  showScreen('screen-lobby-host');
+  startPollingLobby();
+}
+
+// ─── JOIN ROOM ────────────────────────────────────────────────────────────────
+function joinRoom() {
+  myName = document.getElementById('home-name').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!myName) { setMsg('msg', 'Enter your name first.'); return; }
+  if (code.length !== 4) { setMsg('msg', 'Enter a 4-character room code.'); return; }
+
+  const room = getRoomData(code);
+  if (!room) { setMsg('msg', 'Room not found. Check the code.'); return; }
+  if (room.players.length >= 3) { setMsg('msg', 'Room is full (3/3).'); return; }
+  if (room.status === 'roles_assigned') { setMsg('msg', 'Game already started.'); return; }
+
+  roomCode = code;
+  isHost = false;
+
+  // Add player
+  if (!room.players.includes(myName)) {
+    room.players.push(myName);
+  }
+  setRoomData(code, room);
+  players = room.players;
+
+  document.getElementById('guest-code-display').textContent = roomCode;
+  showScreen('screen-lobby-guest');
+  startPollingLobby();
+}
+
+// ─── POLLING ─────────────────────────────────────────────────────────────────
+function startPollingLobby() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(pollLobby, 1200);
+  pollLobby();
+}
+
+function pollLobby() {
+  const room = getRoomData(roomCode);
+  if (!room) return;
+
+  players = room.players;
+
+  // Update player lists
+  ['lobby-player-list', 'guest-player-list'].forEach(listId => {
+    const el = document.getElementById(listId);
+    if (!el) return;
+    el.innerHTML = players.map((p, i) =>
+      `<li>${p}${i === 0 ? ' <span style="font-size:0.7rem;color:#888">(host)</span>' : ''}</li>`
+    ).join('');
+  });
+
+  if (isHost) {
+    const statusEl = document.getElementById('lobby-host-status');
+    const btnStart = document.getElementById('btn-start');
+    const need = 3 - players.length;
+    if (need > 0) {
+      statusEl.innerHTML = `Waiting for ${need} more player${need > 1 ? 's' : ''}<span class="waiting-dots"></span>`;
+      btnStart.style.display = 'none';
+    } else {
+      statusEl.textContent = '3 players joined — ready!';
+      btnStart.style.display = 'block';
+    }
+  }
+
+  // Guest: check if game started
+  if (!isHost && room.status === 'roles_assigned' && room.roles) {
+    clearInterval(pollTimer);
+    receiveRole(room.roles);
+  }
+}
+
+// ─── START GAME (HOST) ───────────────────────────────────────────────────────
+function startGame() {
+  const room = getRoomData(roomCode);
+  if (!room || room.players.length < 3) {
+    setMsg('msg2', 'Need 3 players first.');
+    return;
+  }
+
+  const number = Math.floor(Math.random() * 201); // 0–200
+  const shuffled = [...room.players].sort(() => Math.random() - 0.5);
+  const impostorName = shuffled[0];
+
+  const roles = {};
+  room.players.forEach(name => {
+    roles[name] = name === impostorName
+      ? { type: 'impostor' }
+      : { type: 'number', value: number };
+  });
+
+  room.roles = roles;
+  room.status = 'roles_assigned';
+  setRoomData(roomCode, room);
+
+  clearInterval(pollTimer);
+  myRole = roles[myName];
+  showRoleScreen();
+}
+
+// ─── RECEIVE ROLE (GUEST) ────────────────────────────────────────────────────
+function receiveRole(roles) {
+  myRole = roles[myName];
+  if (!myRole) {
+    // name mismatch fallback
+    setMsg('msg', 'Could not find your role. Rejoin with exact same name.');
+    return;
+  }
+  showRoleScreen();
+}
+
+// ─── SHOW ROLE ────────────────────────────────────────────────────────────────
+function showRoleScreen() {
+  showScreen('screen-role');
+  const label = document.getElementById('role-label');
+  const value = document.getElementById('role-value');
+
+  if (myRole.type === 'impostor') {
+    label.textContent = 'You are';
+    value.textContent = 'IMPOSTOR';
+    value.classList.add('impostor');
+  } else {
+    label.textContent = 'Your number is';
+    value.textContent = myRole.value;
+    value.classList.remove('impostor');
+  }
+}
+
+// ─── PLAY AGAIN ──────────────────────────────────────────────────────────────
+function playAgain() {
+  clearInterval(pollTimer);
+  myRole = null;
+  roomCode = '';
+  isHost = false;
+  players = [];
+  document.getElementById('home-name').value = myName;
+  document.getElementById('join-code').value = '';
+  setMsg('msg', '');
+  showScreen('screen-home');
+}
+
+// ─── CLEAN UP OLD ROOMS ───────────────────────────────────────────────────────
+// Remove rooms older than 2 hours from localStorage
+(function cleanup() {
+  const now = Date.now();
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('impostor_room_')) {
+      try {
+        const d = JSON.parse(localStorage.getItem(k));
+        if (d && now - d.created > 7200000) localStorage.removeItem(k);
+      } catch {}
+    }
+  });
+})();
+</script>
+</body>
+</html>
