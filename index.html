@@ -54,7 +54,7 @@ button.ghost:hover { background: #f0f0f0; }
 <body>
 <div id="app">
   <h1>Impostor</h1>
- 
+
   <div id="s-home" class="screen active">
     <div class="rules-box">
       <b>How to play:</b><br>
@@ -75,7 +75,7 @@ button.ghost:hover { background: #f0f0f0; }
     <button class="ghost" onclick="doJoin()">Join Room</button>
     <div class="err" id="err-home"></div>
   </div>
- 
+
   <div id="s-host" class="screen">
     <p class="hint">Share this code with your friends:</p>
     <div class="code-big" id="disp-code"></div>
@@ -87,7 +87,7 @@ button.ghost:hover { background: #f0f0f0; }
     <button id="btn-start" onclick="doStart()" style="display:none">Assign Roles</button>
     <div class="err" id="err-host"></div>
   </div>
- 
+
   <div id="s-guest" class="screen">
     <p class="hint">You joined:</p>
     <div class="code-big" id="disp-code-guest"></div>
@@ -97,7 +97,7 @@ button.ghost:hover { background: #f0f0f0; }
     </div>
     <p class="waiting">Waiting for host to start<span class="dot-anim"></span></p>
   </div>
- 
+
   <div id="s-role" class="screen">
     <p class="hint" style="text-align:center">Look at this alone — don't show others</p>
     <div class="role-box">
@@ -106,7 +106,7 @@ button.ghost:hover { background: #f0f0f0; }
     </div>
     <button class="ghost" onclick="show('s-ready')">I've seen my role — hide it</button>
   </div>
- 
+
   <div id="s-ready" class="screen">
     <div class="box" style="text-align:center;padding:24px">
       Game is live.<br><br>
@@ -116,11 +116,11 @@ button.ghost:hover { background: #f0f0f0; }
     <button onclick="doPlayAgain()">Play Again</button>
   </div>
 </div>
- 
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, off, remove, query, orderByChild, endAt } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
- 
+
 const firebaseConfig = {
   apiKey: "AIzaSyC6oDnf-gV15C90KhNkrm7aGgLwUlbX2Mw",
   authDomain: "imposter-game-kph-72602.firebaseapp.com",
@@ -130,36 +130,36 @@ const firebaseConfig = {
   messagingSenderId: "589210062434",
   appId: "1:589210062434:web:7cfaa042af90dbf876cb3b"
 };
- 
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
- 
+
 let myName = '';
 let myCode = '';
 let isHost = false;
 let activeRef = null;
 let activeHandler = null;
- 
+
 window.show = function(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
- 
+
 function setErr(id, msg) { document.getElementById(id).textContent = msg; }
 function clearErr(id) { document.getElementById(id).textContent = ''; }
- 
+
 function rand4() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
 }
- 
+
 function stopListener() {
   if (activeRef && activeHandler) {
     off(activeRef, 'value', activeHandler);
     activeRef = null; activeHandler = null;
   }
 }
- 
+
 function renderPlayers(listId, players, showHost) {
   const el = document.getElementById(listId);
   if (!el) return;
@@ -168,7 +168,7 @@ function renderPlayers(listId, players, showHost) {
     `<li>${p}${(showHost && i===0) ? ' <span style="font-size:0.7rem;color:#999">(host)</span>' : ''}</li>`
   ).join('') || '<li style="color:#999">Nobody yet</li>';
 }
- 
+
 window.doCreate = async function() {
   myName = document.getElementById('in-name').value.trim();
   if (!myName) { setErr('err-home', 'Enter your name first.'); return; }
@@ -186,24 +186,24 @@ window.doCreate = async function() {
   show('s-host');
   listenRoom();
 }
- 
+
 window.doJoin = async function() {
   myName = document.getElementById('in-name').value.trim();
   const code = document.getElementById('in-code').value.trim().toUpperCase();
   if (!myName) { setErr('err-home', 'Enter your name first.'); return; }
   if (code.length !== 4) { setErr('err-home', 'Enter the 4-character room code.'); return; }
   clearErr('err-home');
- 
+
   const roomRef = ref(db, 'rooms/' + code);
   const snap = await get(roomRef);
   const room = snap.val();
- 
+
   if (!room) { setErr('err-home', 'Room not found. Check the code.'); return; }
   if (room.status === 'roles_assigned') { setErr('err-home', 'Game already started.'); return; }
   const names = room.players ? Object.keys(room.players) : [];
   if (names.length >= 3) { setErr('err-home', 'Room is full (3/3).'); return; }
   if (names.includes(myName)) { setErr('err-home', 'That name is taken — try a different one.'); return; }
- 
+
   myCode = code;
   isHost = false;
   await set(ref(db, 'rooms/' + code + '/players/' + myName), true);
@@ -211,7 +211,7 @@ window.doJoin = async function() {
   show('s-guest');
   listenRoom();
 }
- 
+
 function listenRoom() {
   stopListener();
   activeRef = ref(db, 'rooms/' + myCode);
@@ -239,7 +239,7 @@ function listenRoom() {
     }
   });
 }
- 
+
 window.doStart = async function() {
   const snap = await get(ref(db, 'rooms/' + myCode));
   const room = snap.val();
@@ -253,7 +253,7 @@ window.doStart = async function() {
   names.forEach(n => { roles[n] = n === impostor ? { type: 'impostor' } : { type: 'number', value: number }; });
   await update(ref(db, 'rooms/' + myCode), { status: 'roles_assigned', roles });
 }
- 
+
 function showRole(role) {
   const tag = document.getElementById('role-tag');
   const val = document.getElementById('role-val');
@@ -268,7 +268,7 @@ function showRole(role) {
   }
   show('s-role');
 }
- 
+
 window.doPlayAgain = function() {
   stopListener();
   myCode = '';
@@ -277,14 +277,14 @@ window.doPlayAgain = function() {
   clearErr('err-home');
   show('s-home');
 }
- 
+
 // Cleanup old rooms
 try {
   const cutoff = Date.now() - 3 * 60 * 60 * 1000;
   const old = query(ref(db, 'rooms'), orderByChild('createdAt'), endAt(cutoff));
   get(old).then(snap => snap.forEach(c => remove(c.ref))).catch(()=>{});
 } catch(e) {}
- 
+
 </script>
 </body>
 </html>
